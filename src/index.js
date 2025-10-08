@@ -11,6 +11,7 @@ import { buildBacklog } from './report/buildBacklog.js';
 import { collectGSC } from './collectors/gsc-api.js';
 import { collectUptime } from './collectors/uptime-betteruptime.js';
 import { collectCookies } from './collectors/cookies.js';
+import { collectSeoCrawl } from './collectors/seo-crawler.js';
 
 const args = Object.fromEntries(
   process.argv.slice(2).map(a => {
@@ -67,7 +68,10 @@ async function main() {
   const cookies = await runCollector('Cookies', () => collectCookies(url));
   console.log('Cookies found:', cookies?.cookies?.length, '3rd-party:', cookies?.thirdPartyRequests?.length);
 
-  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc, uptime, cookies };
+  const seoCrawl = await runCollector('SEO Crawl (free)', () => collectSeoCrawl(url, { maxPages: 50 }));
+  console.log('SEO crawl health:', seoCrawl?.healthScore, 'pages:', seoCrawl?.crawledPages);
+
+  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc, uptime, cookies, seoCrawl };
 
   try {
     const scored = computeScores(raw, 'src/scoring/thresholds.yaml');

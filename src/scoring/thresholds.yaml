@@ -1,44 +1,36 @@
 # thresholds.yaml
 
-pagespeed:
+techniek:
   performance:
-    green: 0.9
-    orange: 0.6
-  accessibility:
-    green: 0.9
-    orange: 0.6
-  best_practices:
-    green: 0.9
-    orange: 0.6
-  seo:
-    green: 0.9
-    orange: 0.6
+    green: 0.7
+    orange: 0.4
 
-headers:
-  required:
-    - content-security-policy
-    - x-frame-options
-    - x-content-type-options
-    - referrer-policy
-    - strict-transport-security
+veiligheid:
+  require_csp: true
+  ipv6_required: true
 
-a11y:
-  violations:
+legal:
+  third_party_max_green: 0
+  third_party_max_orange: 5
+  first_party_max_green: 10
+
+gebruikersvriendelijkheid:
+  a11y_issues_green: 0
+  a11y_issues_orange: 10
+
+marketing:
+  trend_up_bonus: 2
+  trend_down_penalty: -2
+  require_structured_data: true
+
+seo:
+  crawl_health:
+    green: 8
+    orange: 6
+  broken_links:
     green: 0
-    orange: 10    # meer dan 10 WCAG fouten → oranje
-    red: 50       # meer dan 50 WCAG fouten → rood
-
-structuredData:
-  requiredTypes:
-    - WebSite
-    - Organization
-    - BreadcrumbList
-
-cookies:
-  thirdPartyMax:
-    green: 0
-    orange: 5
-    red: 20
+    orange: 10
+    red: 50
 
 uptime:
   availability:
@@ -46,20 +38,8 @@ uptime:
     orange: 0.98
     red: 0.95
 
-# Extra: SEMrush site health
-semrush:
-  site_health:
-    green: 0.9    # 90% of hoger
-    orange: 0.75
-    red: 0.5      # onder 50% = rood
-  broken_links:
-    green: 0
-    orange: 10    # tot 10 gebroken links = oranje
-    red: 50
-
-# Extra: GDPR / AVG compliance
 gdpr:
   consent_mode_required: true
   cookies_declared: true
   optin_required: true
-  ai_statement_required: false   # handig om later aan te zetten
+  ai_statement_required: false
