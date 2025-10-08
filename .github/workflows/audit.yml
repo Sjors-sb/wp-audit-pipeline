@@ -1,0 +1,49 @@
+name: Run Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Site URL (incl. https)'
+        required: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      # Zorgt dat Node je PSI key ziet binnen de run
+      PSI_API_KEY: ${{ secrets.PSI_API_KEY }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run audit
+        run: npm run audit -- --url=${{ github.event.inputs.url }}
+
+      - name: Compute artifact name
+        id: meta
+        shell: bash
+        run: |
+          DOMAIN="$(echo "${{ github.event.inputs.url }}" | sed -E 's#^https?://##; s/[^A-Za-z0-9]+/_/g')"
+          TS="$(date -u +"%Y%m%d-%H%MZ")"
+          NAME="results_${DOMAIN}_${TS}"
+          echo "name=${NAME}" >> $GITHUB_OUTPUT
+
+      - name: Show generated files (debug)
+        run: ls -lah dist || true
+
+      - name: Upload artifact (results json)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.name }}
+          path: dist/*.json
+          if-no-files-found: warn
