@@ -8,6 +8,7 @@ import { collectA11y } from './collectors/a11y-axe.js';
 import { collectStructuredData } from './collectors/structuredData.js';
 import { computeScores } from './scoring/computeScores.js';
 import { buildBacklog } from './report/buildBacklog.js';
+import { collectGSC } from './collectors/gsc-api.js';
 
 // ---- CLI args verwerken ------------------------------------------------------
 const args = Object.fromEntries(
@@ -51,6 +52,8 @@ async function main() {
     error: pagespeed?.error
   });
 
+  const gsc = await runCollector('GSC (last 90d)', () => collectGSC(url));
+
   const headers = await runCollector('Headers', () => collectHeaders(url));
   console.log('Headers missing:', headers?.missing);
 
@@ -60,7 +63,8 @@ async function main() {
   const structuredData = await runCollector('Structured Data', () => collectStructuredData(url));
   console.log('Structured data found/items:', structuredData?.found, structuredData?.items?.length || 0);
 
-  const raw = { site: url, pagespeed, headers, a11y, structuredData };
+  // >>> Zorg dat GSC nu ook in raw komt
+  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc };
 
   // Score + backlog
   try {
