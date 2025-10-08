@@ -1,0 +1,11 @@
+performance:
+  mobile_min: 0.50
+  desktop_min: 0.60
+headers:
+  required: 6
+accessibility:
+  max_violations: 5
+structured_data:
+  required_types:
+    - WebSite
+    - Organization
