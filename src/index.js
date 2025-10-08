@@ -12,7 +12,6 @@ import { collectGSC } from './collectors/gsc-api.js';
 import { collectUptime } from './collectors/uptime-betteruptime.js';
 import { collectCookies } from './collectors/cookies.js';
 
-// ---- CLI args verwerken ------------------------------------------------------
 const args = Object.fromEntries(
   process.argv.slice(2).map(a => {
     const [k, v] = a.split('=');
@@ -28,7 +27,6 @@ if (!url) {
 
 console.log('▶ Audit pipeline start:', url);
 
-// ---- Helper: collectors met logging -----------------------------------------
 async function runCollector(name, fn) {
   console.log(`→ ${name}…`);
   try {
@@ -44,9 +42,7 @@ async function runCollector(name, fn) {
   }
 }
 
-// ---- Main --------------------------------------------------------------------
 async function main() {
-  // Collect
   const pagespeed = await runCollector('PageSpeed', () => collectPageSpeed(url));
   console.log('Pagespeed result (short):', {
     mobileScore: pagespeed?.mobile?.performanceScore,
@@ -71,16 +67,13 @@ async function main() {
   const cookies = await runCollector('Cookies', () => collectCookies(url));
   console.log('Cookies found:', cookies?.cookies?.length, '3rd-party:', cookies?.thirdPartyRequests?.length);
 
-  // Alles verzamelen in raw
   const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc, uptime, cookies };
 
-  // Score + backlog
   try {
     const scored = computeScores(raw, 'src/scoring/thresholds.yaml');
     const backlog = buildBacklog(raw);
     const results = { ...raw, ...scored, backlog };
 
-    // Bestandsnaam met domein + datumstempel
     const date = format(new Date(), 'yyyyMMdd-HHmm');
     const domain = url.replace(/^https?:\/\//, '').replace(/\W+/g, '_');
     const filename = `dist/results_${domain}_${date}.json`;

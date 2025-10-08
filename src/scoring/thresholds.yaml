@@ -1,11 +1,22 @@
-performance:
-  mobile_min: 0.50
-  desktop_min: 0.60
-headers:
-  required: 6
-accessibility:
-  max_violations: 5
-structured_data:
-  required_types:
-    - WebSite
-    - Organization
+techniek:
+  performance:
+    green: 0.7
+    orange: 0.4
+
+veiligheid:
+  require_csp: true
+  ipv6_required: true
+
+legal:
+  third_party_max_green: 0
+  third_party_max_orange: 5
+  first_party_max_green: 10
+
+gebruikersvriendelijkheid:
+  a11y_issues_green: 0
+  a11y_issues_orange: 10
+
+marketing:
+  trend_up_bonus: 2
+  trend_down_penalty: -2
+  require_structured_data: true
