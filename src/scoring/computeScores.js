@@ -75,6 +75,7 @@ export function computeScores(raw, thresholdsFile) {
 
   // Marketing
   let marketingScore = 7;
+  // GSC trend weging
   if (raw.gsc?.error) {
     marketingScore = 6;
   } else {
@@ -83,9 +84,28 @@ export function computeScores(raw, thresholdsFile) {
     if (raw.gsc?.trend === 'up') marketingScore += bonus;
     else if (raw.gsc?.trend === 'down') marketingScore += penalty;
   }
+  // Structured data
   if (thresholds?.marketing?.require_structured_data && !raw.structuredData?.found) {
     marketingScore -= 2;
   }
+  // SEO crawl influence (free)
+  const crawlHealth = raw.seoCrawl?.healthScore ?? null;
+  const broken = raw.seoCrawl?.brokenLinks?.length ?? null;
+  const crawlGreen = thresholds?.seo?.crawl_health?.green ?? 8;
+  const crawlOrange = thresholds?.seo?.crawl_health?.orange ?? 6;
+  const brokenGreen = thresholds?.seo?.broken_links?.green ?? 0;
+  const brokenOrange = thresholds?.seo?.broken_links?.orange ?? 10;
+
+  if (crawlHealth !== null) {
+    if (crawlHealth >= crawlGreen) marketingScore += 1;
+    else if (crawlHealth >= crawlOrange) marketingScore += 0;
+    else marketingScore -= 1;
+  }
+  if (broken !== null) {
+    if (broken > brokenOrange) marketingScore -= 2;
+    else if (broken > brokenGreen) marketingScore -= 1;
+  }
+
   if (marketingScore < 0) marketingScore = 0;
   if (marketingScore > 10) marketingScore = 10;
   scores.marketing = {
