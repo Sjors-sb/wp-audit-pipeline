@@ -1,5 +1,3 @@
-# thresholds.yaml
-
 techniek:
   performance:
     green: 0.7
@@ -34,12 +32,24 @@ seo:
 
 uptime:
   availability:
-    green: 0.995   # 99,5%
+    green: 0.995
     orange: 0.98
     red: 0.95
 
 gdpr:
-  consent_mode_required: true
-  cookies_declared: true
-  optin_required: true
-  ai_statement_required: false
+  third_party_before_consent:
+    green: 0
+    orange: 1
+    red: 3
+  banner_required: true
+
+marketing_extra:
+  weak_titles:
+    orange: 3
+    red: 10
+  missing_meta:
+    orange: 3
+    red: 10
+  h1_not_single:
+    orange: 3
+    red: 10

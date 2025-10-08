@@ -12,6 +12,8 @@ import { collectGSC } from './collectors/gsc-api.js';
 import { collectUptime } from './collectors/uptime-betteruptime.js';
 import { collectCookies } from './collectors/cookies.js';
 import { collectSeoCrawl } from './collectors/seo-crawler.js';
+import { collectLegalCookies } from './collectors/legal-cookies.js';
+import { collectSeoExtra } from './collectors/seo-extra.js';
 
 const args = Object.fromEntries(
   process.argv.slice(2).map(a => {
@@ -45,33 +47,17 @@ async function runCollector(name, fn) {
 
 async function main() {
   const pagespeed = await runCollector('PageSpeed', () => collectPageSpeed(url));
-  console.log('Pagespeed result (short):', {
-    mobileScore: pagespeed?.mobile?.performanceScore,
-    desktopScore: pagespeed?.desktop?.performanceScore,
-    error: pagespeed?.error
-  });
-
   const gsc = await runCollector('GSC (last 90d)', () => collectGSC(url));
-
   const headers = await runCollector('Headers', () => collectHeaders(url));
-  console.log('Headers missing:', headers?.missing);
-
   const a11y = await runCollector('Accessibility (WCAG2AA)', () => collectA11y(url));
-  console.log('WCAG issues:', a11y?.total);
-
   const structuredData = await runCollector('Structured Data', () => collectStructuredData(url));
-  console.log('Structured data found/items:', structuredData?.found, structuredData?.items?.length || 0);
-
   const uptime = await runCollector('Uptime (BetterUptime)', () => collectUptime(url));
-  console.log('Uptime status:', uptime?.status);
-
   const cookies = await runCollector('Cookies', () => collectCookies(url));
-  console.log('Cookies found:', cookies?.cookies?.length, '3rd-party:', cookies?.thirdPartyRequests?.length);
-
   const seoCrawl = await runCollector('SEO Crawl (free)', () => collectSeoCrawl(url, { maxPages: 50 }));
-  console.log('SEO crawl health:', seoCrawl?.healthScore, 'pages:', seoCrawl?.crawledPages);
+  const legal = await runCollector('Legal (cookies/GDPR)', () => collectLegalCookies(url));
+  const seoExtra = await runCollector('Marketing (SEO extra)', () => collectSeoExtra(url, { maxPages: 50 }));
 
-  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc, uptime, cookies, seoCrawl };
+  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc, uptime, cookies, seoCrawl, legal, seoExtra };
 
   try {
     const scored = computeScores(raw, 'src/scoring/thresholds.yaml');
