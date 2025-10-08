@@ -4,11 +4,13 @@ import { format } from 'date-fns';
 import { saveJson } from './utils/saveJson.js';
 import { collectPageSpeed } from './collectors/pagespeed.js';
 import { collectHeaders } from './collectors/headers.js';
-import { collectA11y } from './collectors/a11y-axe.js';
+import { collectA11y } from './collectors/a11y-pa11y.js';
 import { collectStructuredData } from './collectors/structuredData.js';
 import { computeScores } from './scoring/computeScores.js';
 import { buildBacklog } from './report/buildBacklog.js';
 import { collectGSC } from './collectors/gsc-api.js';
+import { collectUptime } from './collectors/uptime-betteruptime.js';
+import { collectCookies } from './collectors/cookies.js';
 
 // ---- CLI args verwerken ------------------------------------------------------
 const args = Object.fromEntries(
@@ -57,14 +59,20 @@ async function main() {
   const headers = await runCollector('Headers', () => collectHeaders(url));
   console.log('Headers missing:', headers?.missing);
 
-  const a11y = await runCollector('A11y (placeholder)', () => collectA11y(url));
-  console.log('A11y summary:', a11y?.summary);
+  const a11y = await runCollector('Accessibility (WCAG2AA)', () => collectA11y(url));
+  console.log('WCAG issues:', a11y?.total);
 
   const structuredData = await runCollector('Structured Data', () => collectStructuredData(url));
   console.log('Structured data found/items:', structuredData?.found, structuredData?.items?.length || 0);
 
-  // >>> Zorg dat GSC nu ook in raw komt
-  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc };
+  const uptime = await runCollector('Uptime (BetterUptime)', () => collectUptime(url));
+  console.log('Uptime status:', uptime?.status);
+
+  const cookies = await runCollector('Cookies', () => collectCookies(url));
+  console.log('Cookies found:', cookies?.cookies?.length, '3rd-party:', cookies?.thirdPartyRequests?.length);
+
+  // Alles verzamelen in raw
+  const raw = { site: url, pagespeed, headers, a11y, structuredData, gsc, uptime, cookies };
 
   // Score + backlog
   try {
