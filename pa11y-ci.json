@@ -1,0 +1,11 @@
+{
+  "defaults": {
+    "timeout": 30000,
+    "wcagStandard": "WCAG2AA",
+    "includeNotices": true,
+    "includeWarnings": true
+  },
+  "urls": [
+    "https://example.com/"
+  ]
+}

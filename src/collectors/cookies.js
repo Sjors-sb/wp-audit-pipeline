@@ -1,5 +1,11 @@
 import puppeteer from 'puppeteer';
 
+/**
+ * Basic cookie & tracking scan:
+ * - loads the page without interacting with any banners
+ * - collects document cookies (first party) and observed requests (3rd party)
+ * This is a baseline for Legal/CMP checks.
+ */
 export async function collectCookies(url) {
   const browser = await puppeteer.launch({
     args: ['--no-sandbox','--disable-setuid-sandbox'],

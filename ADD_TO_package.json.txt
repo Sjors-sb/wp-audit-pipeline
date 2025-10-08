@@ -1,0 +1,9 @@
+Add these deps and then run: npm install
+
+devDependencies:
+  "@axe-core/cli": "^4.9.0"
+  "pa11y-ci": "^3.1.0"
+
+dependencies:
+  "pa11y": "^8.0.0"
+  "puppeteer": "^22.13.1"
