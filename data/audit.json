@@ -1,0 +1,55 @@
+{
+  "site": {
+    "name": "Voorbeeldsite",
+    "url": "https://www.voorbeeld.nl"
+  },
+  "auditDate": "2025-10-09",
+  "brand": {
+    "logo": "https://wpbrothers.nl/wp-content/uploads/2020/01/LogoColor.svg",
+    "fontFamily": "Montserrat, Arial, sans-serif",
+    "brandColor": "#0a2033",
+    "ctaColor": "#ff6900"
+  },
+  "scores": {
+    "performance": 78,
+    "mobile_performance": 65,
+    "seo": 72,
+    "accessibility": 86,
+    "best_practices": 80
+  },
+  "checks": {
+    "plugins": {
+      "total": 22,
+      "outdated": 3,
+      "inactive": 2
+    },
+    "uptime": {
+      "provider": "ManageWP",
+      "last30d": 99.82,
+      "incidents": 1
+    },
+    "wcag": [
+      {
+        "criterion": "1.1.1 Non-text content",
+        "status": "pass"
+      },
+      {
+        "criterion": "1.3.1 Info and relationships",
+        "status": "warn"
+      },
+      {
+        "criterion": "1.4.3 Contrast (minimum)",
+        "status": "fail"
+      },
+      {
+        "criterion": "2.4.4 Link purpose (in context)",
+        "status": "pass"
+      },
+      {
+        "criterion": "3.3.1 Error identification",
+        "status": "warn"
+      }
+    ]
+  },
+  "notes": "Dit is een voorbeeld; vervang de waarden met resultaten uit jullie tooling."
+}

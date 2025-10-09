@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WPAudit",
+  "type": "object",
+  "required": [
+    "site",
+    "auditDate",
+    "scores",
+    "checks"
+  ],
+  "properties": {
+    "site": {
+      "type": "object",
+      "required": [
+        "name",
+        "url"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "auditDate": {
+      "type": "string"
+    },
+    "brand": {
+      "type": "object"
+    },
+    "scores": {
+      "type": "object"
+    },
+    "checks": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+# Drempelwaarden en kleurlogica voor het rapport
+# Gebruik "value" als minimum score/procent voor de kleur.
+performance:
+  green: { value: 85 }
+  orange: { value: 70 }
+  red: { value: 0 }
+
+mobile_performance:
+  green: { value: 80 }
+  orange: { value: 60 }
+  red: { value: 0 }
+
+seo:
+  green: { value: 85 }
+  orange: { value: 70 }
+  red: { value: 0 }
+
+accessibility:
+  green: { value: 90 }
+  orange: { value: 75 }
+  red: { value: 0 }
+
+best_practices:
+  green: { value: 90 }
+  orange: { value: 75 }
+  red: { value: 0 }
+
+uptime_30d:
+  green: { value: 99.9 }
+  orange: { value: 99.0 }
+  red: { value: 0 }
+
+plugins_outdated_ratio:
+  # percentage verouderd tov totaal
+  green: { value: 0 }
+  orange: { value: 10 }
+  red: { value: 20 }
+
+inactive_plugins_ratio:
+  green: { value: 0 }
+  orange: { value: 10 }
+  red: { value: 20 }
+
+wcag_pass_ratio:
+  green: { value: 90 }
+  orange: { value: 75 }
+  red: { value: 0 }
