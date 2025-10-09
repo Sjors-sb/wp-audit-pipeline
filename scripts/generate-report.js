@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Extended single-site report generator with many more sections.
+ * HOTFIX: define sectionBacklog before template usage and keep robust guards.
+ * Extended single-site report generator with backlog table.
  */
 const fs = require('fs');
 const path = require('path');
@@ -18,18 +19,15 @@ const paths = {
 function ensureDirs() {
   if (!fs.existsSync(paths.dist)) fs.mkdirSync(paths.dist, { recursive: true });
 }
-
 function loadJson(p) { return JSON.parse(fs.readFileSync(p, 'utf-8')); }
 function loadYaml(p) { return yaml.load(fs.readFileSync(p, 'utf-8')); }
 function readCss(p) { return fs.readFileSync(p, 'utf-8'); }
-
 function colorFor(value, scale) {
-  if (!scale) return 'warn';
-  if (value >= (scale.green?.value ?? 0)) return 'ok';
-  if (value >= (scale.orange?.value ?? 0)) return 'warn';
+  if (!scale && scale !== 0) return 'warn';
+  if (value >= (scale?.green?.value ?? 0)) return 'ok';
+  if (value >= (scale?.orange?.value ?? 0)) return 'warn';
   return 'bad';
 }
-
 function pct(n, digits=1) { return `${(n).toFixed(digits)}%`; }
 function ratio(part, total) { return total > 0 ? (part / total) * 100 : 0; }
 function escapeHtml(str='') {
@@ -40,36 +38,27 @@ function escapeHtml(str='') {
 function renderBadge(label, color) { return `<span class="badge ${color}">${label}</span>`; }
 function boolBadge(v) { return renderBadge(v ? 'JA' : 'NEE', v ? 'ok' : 'bad'); }
 function n(v, fallback='—') { return (v === 0 || v) ? v : fallback; }
-
-function row(label, value) {
-  return `<div class="kv"><span class="k">${escapeHtml(label)}</span><span>${value}</span></div>`;
-}
-
-function table(rows) {
-  return `<table class="table">
-    <thead><tr><th>Key</th><th>Waarde</th><th>Status</th></tr></thead>
-    <tbody>${rows.join('')}</tbody></table>`;
-}
+function row(label, value) { return `<div class="kv"><span class="k">${escapeHtml(label)}</span><span>${value}</span></div>`; }
 
 function main() {
   ensureDirs();
   const data = loadJson(paths.input);
-  const t = loadYaml(paths.thresholds);
+  const t = loadYaml(paths.thresholds) || {};
   const css = readCss(paths.css);
 
   const s = data.scores || {};
   const checks = data.checks || {};
   const brand = data.brand || {};
 
-  // Derived ratios
   const plugins = checks.plugins || {};
   const uptime = checks.uptime || {};
   const wcag = checks.wcag || [];
+
   const outdatedRatio = ratio(plugins.outdated || 0, plugins.total || 0);
   const inactiveRatio = ratio(plugins.inactive || 0, plugins.total || 0);
   const wcagPass = ratio(wcag.filter(x => x.status === 'pass').length, wcag.length || 1);
 
-  // Sections
+  // === Sections (same as PLUS build) ===
   const sectionScores = `
     <div class="card section">
       <div class="h2">Prestatie scores</div>
@@ -108,25 +97,6 @@ function main() {
       </div>
     </div>`;
 
-  const sectionWCAG = `
-    <div class="card section">
-      <div class="h2">WCAG 2.1 AA overzicht</div>
-      <div class="kv"><span class="k">Slagingspercentage</span><strong>${pct(wcagPass)}</strong></div>
-      <div style="margin:8px 0;">${renderBadge(pct(wcagPass), colorFor(wcagPass, t.wcag_pass_ratio))}</div>
-      <table class="table">
-        <thead><tr><th>Succescriterium</th><th>Status</th></tr></thead>
-        <tbody>
-          ${wcag.map(row => {
-            const map = { pass: 'ok', warn: 'warn', fail: 'bad' };
-            const color = map[row.status] || 'warn';
-            return `<tr><td>${escapeHtml(row.criterion)}</td><td>${renderBadge(row.status.toUpperCase(), color)}</td></tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      <p><small class="muted">Bundel per onderwerp en verwijs naar officiële <a class="link" href="https://www.w3.org/TR/WCAG21/">WCAG 2.1</a>.</small></p>
-    </div>`;
-
-  // New rich sections
   const perf = checks.performance_metrics || {};
   const sectionPerfDetails = `
     <div class="card section">
@@ -137,7 +107,7 @@ function main() {
         <div class="item"><div class="label">INP</div><div class="val">${n(perf.inp, '—')}</div></div>
         <div class="item"><div class="label">TTFB</div><div class="val">${n(perf.ttfb, '—')}</div></div>
       </div>
-      <small class="muted">Meetwaarden uit lab/field data; streef: LCP &lt; 2.5s, CLS &lt; 0.1, INP &lt; 200ms.</small>
+      <small class="muted">Streef: LCP &lt; 2.5s, CLS &lt; 0.1, INP &lt; 200ms.</small>
     </div>`;
 
   const seo = checks.seo_details || {};
@@ -219,6 +189,35 @@ function main() {
     </div>`;
 
   const notes = data.notes ? `<div class="card section"><div class="h2">Notities</div><div class="callout">${escapeHtml(data.notes)}</div></div>` : '';
+
+  // === Backlog (HOTFIX: define before template usage) ===
+  const backlog = Array.isArray(data.backlog) ? data.backlog : [];
+  const sectionBacklog = backlog.length ? `
+    <div class="card section">
+      <div class="h2">Backlog & verbeterpunten</div>
+      <table class="table compact">
+        <thead><tr>
+          <th>Categorie</th>
+          <th>Actie</th>
+          <th>Prioriteit</th>
+          <th>Owner</th>
+        </tr></thead>
+        <tbody>
+          ${backlog.map(i => {
+            const p = (i.priority || '').toLowerCase();
+            const pClass = p === 'hoog' || p === 'high' ? 'high' : (p === 'laag' || p === 'low' ? 'low' : 'medium');
+            const pLabel = i.priority || '—';
+            return `<tr>
+              <td>${escapeHtml(i.category || '—')}</td>
+              <td>${escapeHtml(i.item || '—')}</td>
+              <td><span class="prio ${pClass}">${escapeHtml(pLabel)}</span></td>
+              <td>${escapeHtml(i.owner || '—')}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
 
   const html = `<!doctype html>
 <html lang="nl">
