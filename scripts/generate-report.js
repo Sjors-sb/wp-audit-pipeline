@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 /**
- * Single-site report generator
- * - Input:   data/audit.json
- * - Config:  audit/thresholds.yaml
- * - Output:  dist/report.html
- *
- * Gebruik: node scripts/generate-report.js
+ * Extended single-site report generator with many more sections.
  */
 const fs = require('fs');
 const path = require('path');
@@ -24,44 +19,40 @@ function ensureDirs() {
   if (!fs.existsSync(paths.dist)) fs.mkdirSync(paths.dist, { recursive: true });
 }
 
-function loadJson(p) {
-  return JSON.parse(fs.readFileSync(p, 'utf-8'));
-}
-
-function loadYaml(p) {
-  return yaml.load(fs.readFileSync(p, 'utf-8'));
-}
-
-function readCss(p) {
-  return fs.readFileSync(p, 'utf-8');
-}
+function loadJson(p) { return JSON.parse(fs.readFileSync(p, 'utf-8')); }
+function loadYaml(p) { return yaml.load(fs.readFileSync(p, 'utf-8')); }
+function readCss(p) { return fs.readFileSync(p, 'utf-8'); }
 
 function colorFor(value, scale) {
-  // scale heeft keys: green, orange, red met min values
+  if (!scale) return 'warn';
   if (value >= (scale.green?.value ?? 0)) return 'ok';
   if (value >= (scale.orange?.value ?? 0)) return 'warn';
   return 'bad';
 }
 
-function pct(n, digits=1) {
-  return `${(n).toFixed(digits)}%`;
-}
-
-function ratio(part, total) {
-  return total > 0 ? (part / total) * 100 : 0;
-}
-
+function pct(n, digits=1) { return `${(n).toFixed(digits)}%`; }
+function ratio(part, total) { return total > 0 ? (part / total) * 100 : 0; }
 function escapeHtml(str='') {
-  return String(str).replace(/[&<>"']/g, (m) => ({
+  return String(str).replace(/[&<>\"']/g, (m) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
   })[m]);
 }
+function renderBadge(label, color) { return `<span class="badge ${color}">${label}</span>`; }
+function boolBadge(v) { return renderBadge(v ? 'JA' : 'NEE', v ? 'ok' : 'bad'); }
+function n(v, fallback='—') { return (v === 0 || v) ? v : fallback; }
 
-function renderBadge(label, color) {
-  return `<span class="badge ${color}">${label}</span>`;
+function row(label, value) {
+  return `<div class="kv"><span class="k">${escapeHtml(label)}</span><span>${value}</span></div>`;
 }
 
-function render() {
+function table(rows) {
+  return `<table class="table">
+    <thead><tr><th>Key</th><th>Waarde</th><th>Status</th></tr></thead>
+    <tbody>${rows.join('')}</tbody></table>`;
+}
+
+function main() {
+  ensureDirs();
   const data = loadJson(paths.input);
   const t = loadYaml(paths.thresholds);
   const css = readCss(paths.css);
@@ -69,100 +60,165 @@ function render() {
   const s = data.scores || {};
   const checks = data.checks || {};
   const brand = data.brand || {};
+
+  // Derived ratios
   const plugins = checks.plugins || {};
   const uptime = checks.uptime || {};
   const wcag = checks.wcag || [];
-
   const outdatedRatio = ratio(plugins.outdated || 0, plugins.total || 0);
   const inactiveRatio = ratio(plugins.inactive || 0, plugins.total || 0);
   const wcagPass = ratio(wcag.filter(x => x.status === 'pass').length, wcag.length || 1);
 
-  const blocks = [
-    {
-      title: 'Prestatie scores',
-      content: `
-        <div class="grid">
-          ${['performance','mobile_performance','seo','accessibility','best_practices'].map(key => {
-            const val = s[key] ?? 0;
-            const col = colorFor(val, t[key]);
-            const label = key.replace('_',' ').replace('_',' ');
-            return `<div class="card">
-              <div class="kv"><span class="k">${escapeHtml(label)}</span> ${renderBadge(col === 'ok' ? 'Goed' : col === 'warn' ? 'Aandacht' : 'Actie', col)}</div>
-              <div class="score">${val}<small class="muted">/100</small></div>
-            </div>`;
-          }).join('')}
-        </div>
-      `
-    },
-    {
-      title: 'Plugins & onderhoud',
-      content: `
-        <div class="grid">
-          <div class="card">
-            <div class="kv"><span class="k">Totaal plugins</span><strong>${plugins.total ?? 0}</strong></div>
-            <hr/>
-            <div class="kv"><span class="k">Verouderd</span>
-              <span>${plugins.outdated ?? 0} (${pct(outdatedRatio)})</span>
-            </div>
-            <div style="margin-top:8px;">${renderBadge(
-              pct(outdatedRatio),
-              colorFor(outdatedRatio, t.plugins_outdated_ratio)
-            )}</div>
-          </div>
-          <div class="card">
-            <div class="kv"><span class="k">Gedeactiveerd</span>
-              <span>${plugins.inactive ?? 0} (${pct(inactiveRatio)})</span>
-            </div>
-            <div style="margin-top:8px;">${renderBadge(
-              pct(inactiveRatio),
-              colorFor(inactiveRatio, t.inactive_plugins_ratio)
-            )}</div>
-          </div>
-          <div class="card">
-            <div class="kv"><span class="k">Uptime (30 dagen)</span>
-              <span>${uptime.last30d != null ? pct(uptime.last30d) : '—'}</span>
-            </div>
-            <div style="margin-top:8px;">${renderBadge(
-              uptime.last30d != null ? pct(uptime.last30d) : '—',
-              colorFor(uptime.last30d ?? 0, t.uptime_30d)
-            )}</div>
-            <small class="muted">Bron: ${escapeHtml(uptime.provider || '—')}</small>
-          </div>
-        </div>
-      `
-    },
-    {
-      title: 'WCAG 2.1 AA overzicht',
-      content: `
+  // Sections
+  const sectionScores = `
+    <div class="card section">
+      <div class="h2">Prestatie scores</div>
+      <div class="grid">
+        ${['performance','mobile_performance','seo','accessibility','best_practices'].map(key => {
+          const val = s[key] ?? 0;
+          const col = colorFor(val, t[key]);
+          const label = key.replace(/_/g,' ');
+          return `<div class="card">
+            <div class="kv"><span class="k">${escapeHtml(label)}</span> ${renderBadge(col === 'ok' ? 'Goed' : col === 'warn' ? 'Aandacht' : 'Actie', col)}</div>
+            <div class="score">${val}<small class="muted">/100</small></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  const sectionPlugins = `
+    <div class="card section">
+      <div class="h2">Plugins & onderhoud</div>
+      <div class="grid">
         <div class="card">
-          <div class="kv"><span class="k">Slagingspercentage</span>
-            <strong>${pct(wcagPass)}</strong>
-          </div>
-          <div style="margin:8px 0;">${renderBadge(
-            pct(wcagPass),
-            colorFor(wcagPass, t.wcag_pass_ratio)
-          )}</div>
-          <table class="table">
-            <thead><tr><th>Succescriterium</th><th>Status</th></tr></thead>
-            <tbody>
-              ${wcag.map(row => {
-                const map = { pass: 'ok', warn: 'warn', fail: 'bad' };
-                const color = map[row.status] || 'warn';
-                return `<tr>
-                  <td>${escapeHtml(row.criterion)}</td>
-                  <td>${renderBadge(row.status.toUpperCase(), color)}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-          <p><small class="muted">
-            Tip: bundel per onderwerp en verwijs naar officiële 
-            <a class="link" href="https://www.w3.org/TR/WCAG21/">WCAG 2.1 documentatie</a> voor details.
-          </small></p>
+          ${row('Totaal plugins', n(plugins.total, 0))}
+          <hr/>
+          ${row('Verouderd', `${n(plugins.outdated,0)} (${pct(outdatedRatio)})`)}
+          <div style="margin-top:8px;">${renderBadge(pct(outdatedRatio), colorFor(outdatedRatio, t.plugins_outdated_ratio))}</div>
         </div>
-      `
-    }
-  ];
+        <div class="card">
+          ${row('Gedeactiveerd', `${n(plugins.inactive,0)} (${pct(inactiveRatio)})`)}
+          <div style="margin-top:8px;">${renderBadge(pct(inactiveRatio), colorFor(inactiveRatio, t.inactive_plugins_ratio))}</div>
+        </div>
+        <div class="card">
+          ${row('Uptime (30 dagen)', uptime.last30d != null ? pct(uptime.last30d) : '—')}
+          <div style="margin-top:8px;">${renderBadge(uptime.last30d != null ? pct(uptime.last30d) : '—', colorFor(uptime.last30d ?? 0, t.uptime_30d))}</div>
+          <small class="muted">Bron: ${escapeHtml(uptime.provider || '—')}</small>
+        </div>
+      </div>
+    </div>`;
+
+  const sectionWCAG = `
+    <div class="card section">
+      <div class="h2">WCAG 2.1 AA overzicht</div>
+      <div class="kv"><span class="k">Slagingspercentage</span><strong>${pct(wcagPass)}</strong></div>
+      <div style="margin:8px 0;">${renderBadge(pct(wcagPass), colorFor(wcagPass, t.wcag_pass_ratio))}</div>
+      <table class="table">
+        <thead><tr><th>Succescriterium</th><th>Status</th></tr></thead>
+        <tbody>
+          ${wcag.map(row => {
+            const map = { pass: 'ok', warn: 'warn', fail: 'bad' };
+            const color = map[row.status] || 'warn';
+            return `<tr><td>${escapeHtml(row.criterion)}</td><td>${renderBadge(row.status.toUpperCase(), color)}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <p><small class="muted">Bundel per onderwerp en verwijs naar officiële <a class="link" href="https://www.w3.org/TR/WCAG21/">WCAG 2.1</a>.</small></p>
+    </div>`;
+
+  // New rich sections
+  const perf = checks.performance_metrics || {};
+  const sectionPerfDetails = `
+    <div class="card section">
+      <div class="h2">Performance details (Core Web Vitals)</div>
+      <div class="kpi">
+        <div class="item"><div class="label">LCP</div><div class="val">${n(perf.lcp, '—')}</div></div>
+        <div class="item"><div class="label">CLS</div><div class="val">${n(perf.cls, '—')}</div></div>
+        <div class="item"><div class="label">INP</div><div class="val">${n(perf.inp, '—')}</div></div>
+        <div class="item"><div class="label">TTFB</div><div class="val">${n(perf.ttfb, '—')}</div></div>
+      </div>
+      <small class="muted">Meetwaarden uit lab/field data; streef: LCP &lt; 2.5s, CLS &lt; 0.1, INP &lt; 200ms.</small>
+    </div>`;
+
+  const seo = checks.seo_details || {};
+  const sectionSEO = `
+    <div class="card section">
+      <div class="h2">SEO details</div>
+      <div class="grid">
+        <div class="card">
+          ${row('Indexeerbaar', boolBadge(!!seo.indexable))}
+          ${row('Robots.txt', boolBadge(!!seo.robots))}
+          ${row('Sitemap', seo.sitemap ? `<a class="link" href="${escapeHtml(seo.sitemap)}">sitemap</a>` : '—')}
+          ${row('Canonical', seo.canonical ? `<code class="inline">${escapeHtml(seo.canonical)}</code>` : '—')}
+        </div>
+        <div class="card">
+          ${row('Meta title', seo.meta_title ? escapeHtml(seo.meta_title) : '—')}
+          ${row('Meta description', seo.meta_description ? escapeHtml(seo.meta_description) : '—')}
+          ${row('Open Graph', boolBadge(!!seo.og))}
+          ${row('Twitter Cards', boolBadge(!!seo.twitter))}
+        </div>
+      </div>
+    </div>`;
+
+  const security = checks.security || {};
+  const sectionSecurity = `
+    <div class="card section">
+      <div class="h2">Security & HTTPS</div>
+      ${row('HTTPS', boolBadge(!!security.https))}
+      ${row('HSTS', boolBadge(!!security.hsts))}
+      ${row('Mixed content', renderBadge(security.mixed_content ? 'AANWEZIG' : 'NIET GEVONDEN', security.mixed_content ? 'warn' : 'ok'))}
+      ${row('Headers (CSP, XFO, etc.)', security.headers ? security.headers.map(h=>`<span class="tag">${escapeHtml(h)}</span>`).join('') : '—')}
+    </div>`;
+
+  const legal = checks.legal || {};
+  const sectionLegal = `
+    <div class="card section">
+      <div class="h2">Legal & compliance</div>
+      ${row('Cookiemelding/consent', boolBadge(!!legal.cookie_consent))}
+      ${row('Privacyverklaring', legal.privacy_url ? `<a class="link" href="${escapeHtml(legal.privacy_url)}">privacy</a>` : '—')}
+      ${row('Verwerkersovereenkomst (DPA) aanwezig', boolBadge(!!legal.dpa))}
+      ${row('Gegevensbewaring/anonimiseren', legal.data_retention ? escapeHtml(legal.data_retention) : '—')}
+    </div>`;
+
+  const ux = checks.ux || {};
+  const sectionUX = `
+    <div class="card section">
+      <div class="h2">UX & content</div>
+      <div class="grid">
+        <div class="card">
+          ${row('Navigatie-diepte', n(ux.nav_depth, '—'))}
+          ${row('Zoekfunctie', boolBadge(!!ux.search))}
+          ${row('Breadcrumbs', boolBadge(!!ux.breadcrumbs))}
+        </div>
+        <div class="card">
+          ${row('404-pagina', boolBadge(!!ux.page_404))}
+          ${row('Formulier validatie', boolBadge(!!ux.form_validation))}
+          ${row('Taal/vertalingen', ux.locale ? escapeHtml(ux.locale) : '—')}
+        </div>
+      </div>
+    </div>`;
+
+  const wp = checks.wordpress || {};
+  const sectionWP = `
+    <div class="card section">
+      <div class="h2">WordPress hygiëne</div>
+      ${row('WP versie', n(wp.version,'—'))}
+      ${row('Gebruikers met adminrol', n(wp.admin_users,'—'))}
+      ${row('Auto-updates', boolBadge(!!wp.auto_updates))}
+      ${row('Backups actief', boolBadge(!!wp.backups))}
+    </div>`;
+
+  const analytics = checks.analytics || {};
+  const sectionAnalytics = `
+    <div class="card section">
+      <div class="h2">Analytics & tagging</div>
+      ${row('GA4', boolBadge(!!analytics.ga4))}
+      ${row('GTM', boolBadge(!!analytics.gtm))}
+      ${row('Consent-mode v2', boolBadge(!!analytics.consent_mode))}
+      ${row('Server-side tagging', boolBadge(!!analytics.server_side))}
+    </div>`;
+
+  const notes = data.notes ? `<div class="card section"><div class="h2">Notities</div><div class="callout">${escapeHtml(data.notes)}</div></div>` : '';
 
   const html = `<!doctype html>
 <html lang="nl">
@@ -185,26 +241,26 @@ function render() {
       <a class="cta" href="${escapeHtml(data.site?.url || '#')}" target="_blank" rel="noreferrer">Bekijk site</a>
     </div>
 
-    ${blocks.map(b => `
-      <div class="card">
-        <div class="h2">${escapeHtml(b.title)}</div>
-        ${b.content}
-      </div>
-    `).join('')}
+    ${sectionScores}
+    ${sectionPlugins}
+    ${sectionPerfDetails}
+    ${sectionSEO}
+    ${sectionSecurity}
+    ${sectionLegal}
+    ${sectionUX}
+    ${sectionWP}
+    ${sectionAnalytics}
+    ${sectionWCAG}
+    ${notes}
+    ${sectionBacklog}
 
     <div class="footer">
-      Gemaakt met jullie audit pipeline. Kleuren volgen drempelwaarden uit <code>audit/thresholds.yaml</code>.
+      Gemaakt met de audit pipeline. Kleuren volgen drempelwaarden uit <code>audit/thresholds.yaml</code>.
     </div>
   </div>
 </body>
 </html>`;
 
-  return html;
-}
-
-function main() {
-  ensureDirs();
-  const html = render();
   fs.writeFileSync(paths.out, html, 'utf-8');
   console.log(`✅ Rapport gegenereerd: ${paths.out}`);
 }

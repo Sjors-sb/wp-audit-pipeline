@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "plugins": {
+      "total": 22,
+      "outdated": 3,
+      "inactive": 2
+    },
+    "uptime": {
+      "provider": "ManageWP",
+      "last30d": 99.82,
+      "incidents": 1
+    },
+    "wcag": [
+      {
+        "criterion": "1.1.1 Non-text content",
+        "status": "pass"
+      },
+      {
+        "criterion": "1.3.1 Info and relationships",
+        "status": "warn"
+      },
+      {
+        "criterion": "1.4.3 Contrast (minimum)",
+        "status": "fail"
+      }
+    ]
+  }
+}

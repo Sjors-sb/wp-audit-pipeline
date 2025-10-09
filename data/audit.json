@@ -1,7 +1,7 @@
 {
   "site": {
-    "name": "Voorbeeldsite",
-    "url": "https://www.voorbeeld.nl"
+    "name": "WP Brothers",
+    "url": "https://wpbrothers.nl/"
   },
   "auditDate": "2025-10-09",
   "brand": {
@@ -40,16 +40,86 @@
       {
         "criterion": "1.4.3 Contrast (minimum)",
         "status": "fail"
-      },
-      {
-        "criterion": "2.4.4 Link purpose (in context)",
-        "status": "pass"
-      },
-      {
-        "criterion": "3.3.1 Error identification",
-        "status": "warn"
       }
-    ]
+    ],
+    "performance_metrics": {
+      "lcp": "2.9s",
+      "cls": "0.06",
+      "inp": "220ms",
+      "ttfb": "350ms"
+    },
+    "seo_details": {
+      "indexable": true,
+      "robots": true,
+      "sitemap": "https://wpbrothers.nl/sitemap.xml",
+      "canonical": "https://wpbrothers.nl/",
+      "meta_title": "WP Brothers \u2014 WordPress specialisten",
+      "meta_description": "Wij bouwen en onderhouden WordPress websites.",
+      "og": true,
+      "twitter": true
+    },
+    "security": {
+      "https": true,
+      "hsts": false,
+      "mixed_content": false,
+      "headers": [
+        "CSP",
+        "X-Content-Type-Options",
+        "Referrer-Policy"
+      ]
+    },
+    "legal": {
+      "cookie_consent": true,
+      "privacy_url": "https://wpbrothers.nl/privacy",
+      "dpa": false,
+      "data_retention": "Gebruikersdata wordt na 12 mnd geanonimiseerd."
+    },
+    "ux": {
+      "nav_depth": 3,
+      "search": true,
+      "breadcrumbs": true,
+      "page_404": true,
+      "form_validation": true,
+      "locale": "nl-NL"
+    },
+    "wordpress": {
+      "version": "6.6",
+      "admin_users": 2,
+      "auto_updates": true,
+      "backups": true
+    },
+    "analytics": {
+      "ga4": true,
+      "gtm": true,
+      "consent_mode": true,
+      "server_side": false
+    }
   },
-  "notes": "Dit is een voorbeeld; vervang de waarden met resultaten uit jullie tooling."
+  "notes": "Dit is een uitgebreide demoversie. Koppel jullie echte data via collectors.",
+  "backlog": [
+    {
+      "category": "Performance",
+      "item": "Optimaliseer hero-afbeelding (LCP) met lazyload en moderne formats",
+      "priority": "Hoog",
+      "owner": "Frontend"
+    },
+    {
+      "category": "WCAG",
+      "item": "Contrast verhogen op CTA-knoppen + focus states verbeteren",
+      "priority": "Gemiddeld",
+      "owner": "Design"
+    },
+    {
+      "category": "SEO",
+      "item": "Meta descriptions toevoegen aan 25 blogposts",
+      "priority": "Laag",
+      "owner": "Marketing"
+    },
+    {
+      "category": "Security",
+      "item": "Activeer HSTS en review CSP policy",
+      "priority": "Hoog",
+      "owner": "DevOps"
+    }
+  ]
 }
