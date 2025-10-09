@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * HOTFIX: define sectionBacklog before template usage and keep robust guards.
- * Extended single-site report generator with backlog table.
+ * Single-site report generator (PLUS + Backlog) — Patched
+ * - Defines all section variables (incl. WCAG & Backlog) before usage.
  */
 const fs = require('fs');
 const path = require('path');
@@ -16,12 +16,11 @@ const paths = {
   out: path.join(root, 'dist', 'report.html'),
 };
 
-function ensureDirs() {
-  if (!fs.existsSync(paths.dist)) fs.mkdirSync(paths.dist, { recursive: true });
-}
+function ensureDirs() { if (!fs.existsSync(paths.dist)) fs.mkdirSync(paths.dist, { recursive: true }); }
 function loadJson(p) { return JSON.parse(fs.readFileSync(p, 'utf-8')); }
 function loadYaml(p) { return yaml.load(fs.readFileSync(p, 'utf-8')); }
 function readCss(p) { return fs.readFileSync(p, 'utf-8'); }
+
 function colorFor(value, scale) {
   if (!scale && scale !== 0) return 'warn';
   if (value >= (scale?.green?.value ?? 0)) return 'ok';
@@ -52,13 +51,10 @@ function main() {
 
   const plugins = checks.plugins || {};
   const uptime = checks.uptime || {};
-  const wcag = checks.wcag || [];
-
   const outdatedRatio = ratio(plugins.outdated || 0, plugins.total || 0);
   const inactiveRatio = ratio(plugins.inactive || 0, plugins.total || 0);
-  const wcagPass = ratio(wcag.filter(x => x.status === 'pass').length, wcag.length || 1);
 
-  // === Sections (same as PLUS build) ===
+  // Sections
   const sectionScores = `
     <div class="card section">
       <div class="h2">Prestatie scores</div>
@@ -92,7 +88,7 @@ function main() {
         <div class="card">
           ${row('Uptime (30 dagen)', uptime.last30d != null ? pct(uptime.last30d) : '—')}
           <div style="margin-top:8px;">${renderBadge(uptime.last30d != null ? pct(uptime.last30d) : '—', colorFor(uptime.last30d ?? 0, t.uptime_30d))}</div>
-          <small class="muted">Bron: ${escapeHtml(uptime.provider || '—')}</small>
+          <small class="muted">Bron: ${escapeHtml((checks.uptime||{}).provider || '—')}</small>
         </div>
       </div>
     </div>`;
@@ -188,9 +184,29 @@ function main() {
       ${row('Server-side tagging', boolBadge(!!analytics.server_side))}
     </div>`;
 
-  const notes = data.notes ? `<div class="card section"><div class="h2">Notities</div><div class="callout">${escapeHtml(data.notes)}</div></div>` : '';
+  // WCAG section (defined before template usage)
+  const wcag = checks.wcag || [];
+  const wcagPass = (wcag.length ? (wcag.filter(x => x.status === 'pass').length / wcag.length) * 100 : 0);
+  const sectionWCAG = `
+    <div class="card section">
+      <div class="h2">WCAG 2.1 AA overzicht</div>
+      <div class="kv"><span class="k">Slagingspercentage</span><strong>${(wcagPass).toFixed(1)}%</strong></div>
+      <div style="margin:8px 0;">${renderBadge(`${(wcagPass).toFixed(1)}%`, colorFor(wcagPass, t.wcag_pass_ratio))}</div>
+      <table class="table">
+        <thead><tr><th>Succescriterium</th><th>Status</th></tr></thead>
+        <tbody>
+          ${wcag.map(row => {
+            const map = { pass: 'ok', warn: 'warn', fail: 'bad' };
+            const color = map[row.status] || 'warn';
+            return `<tr><td>${escapeHtml(row.criterion)}</td><td>${renderBadge(row.status.toUpperCase(), color)}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <p><small class="muted">Bundel per onderwerp en verwijs naar <a class="link" href="https://www.w3.org/TR/WCAG21/">WCAG 2.1</a>.</small></p>
+    </div>`;
 
-  // === Backlog (HOTFIX: define before template usage) ===
+  // Notes & Backlog
+  const notes = data.notes ? `<div class="card section"><div class="h2">Notities</div><div class="callout">${escapeHtml(data.notes)}</div></div>` : '';
   const backlog = Array.isArray(data.backlog) ? data.backlog : [];
   const sectionBacklog = backlog.length ? `
     <div class="card section">
@@ -216,8 +232,7 @@ function main() {
           }).join('')}
         </tbody>
       </table>
-    </div>
-  ` : '';
+    </div>` : '';
 
   const html = `<!doctype html>
 <html lang="nl">
