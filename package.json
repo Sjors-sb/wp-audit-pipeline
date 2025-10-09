@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "build:report": "node scripts/generate-report.js",
-    "audit:run": "node scripts/run-all.js"
+    "audit:run": "node scripts/run-all.js --siteName \"WP Brothers\" --siteUrl \"https://wpbrothers.nl\"",
+    "audit:run:wpbrothers": "node scripts/run-all.js --siteName \"WP Brothers\" --siteUrl \"https://wpbrothers.nl\""
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

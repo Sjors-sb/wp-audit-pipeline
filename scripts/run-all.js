@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 /**
- * Orchestrator: één commando doorloopt de hele flow
- * - Draait (optionele) collectors in scripts/collectors/*
- * - Mergt partials in data/partials/*.json → data/audit.json
- * - Valideert minimaal schema
- * - Genereert HTML rapport (dist/report.html)
- *
- * Gebruik:
- *   node scripts/run-all.js --siteName "Mijn Site" --siteUrl "https://example.com"
+ * Orchestrator met auto siteName detectie
+ * - Vereist: --siteUrl
+ * - Haalt siteName uit <meta property="og:site_name"> of <title>, anders hostname
+ * - Draait collectors, mergen, validatie, rapport
  */
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
+const { URL } = require('url');
 
 const root = process.cwd();
 const paths = {
@@ -23,7 +20,6 @@ const paths = {
 };
 
 function ensureDir(p) { if (!fs.existsSync(p)) fs.mkdirSync(p, {recursive:true}); }
-function readIfExists(p) { return fs.existsSync(p) ? fs.readFileSync(p, 'utf-8') : null; }
 function jread(p) { return JSON.parse(fs.readFileSync(p, 'utf-8')); }
 function jwrite(p, obj) { fs.writeFileSync(p, JSON.stringify(obj, null, 2)); }
 
@@ -38,6 +34,32 @@ function parseArgs() {
     }
   }
   return out;
+}
+
+async function fetchHtml(url) {
+  try {
+    const res = await fetch(url, { redirect: 'follow' });
+    const txt = await res.text();
+    return txt;
+  } catch (e) {
+    console.warn('⚠️ Kon HTML niet ophalen voor siteName:', e.message);
+    return '';
+  }
+}
+
+function extractSiteName(html, siteUrl) {
+  if (html) {
+    const og = html.match(/<meta[^>]+property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i);
+    if (og && og[1]) return og[1].trim();
+    const title = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (title && title[1]) return title[1].trim();
+  }
+  try {
+    const u = new URL(siteUrl);
+    return u.hostname.replace(/^www\./,'');
+  } catch {
+    return siteUrl;
+  }
 }
 
 function runCollectors() {
@@ -58,11 +80,11 @@ function runCollectors() {
   }
 }
 
-function mergePartials(args) {
+function mergePartials({siteName, siteUrl}) {
   ensureDir(paths.partials);
   const partialFiles = fs.readdirSync(paths.partials).filter(f => f.endsWith('.json'));
   const merged = {
-    site: { name: args.siteName || 'Onbekende site', url: args.siteUrl || '' },
+    site: { name: siteName, url: siteUrl },
     auditDate: new Date().toISOString().slice(0,10),
     brand: {},
     scores: {},
@@ -72,7 +94,6 @@ function mergePartials(args) {
   for (const fname of partialFiles) {
     const p = path.join(paths.partials, fname);
     const data = jread(p);
-    // Conventie: partial kan keys bevatten: site, brand, scores, checks, notes
     for (const k of ['site','brand','scores','checks','notes']) {
       if (data[k]) {
         if (typeof data[k] === 'object' && !Array.isArray(data[k])) {
@@ -86,7 +107,6 @@ function mergePartials(args) {
     }
   }
 
-  // Als er al een bestaande audit.json is, neem die als basis en overschrijf met partials
   if (fs.existsSync(paths.auditJson)) {
     try {
       const current = jread(paths.auditJson);
@@ -106,7 +126,6 @@ function mergePartials(args) {
 }
 
 function validateSchema(obj) {
-  // Minimale check zonder externe deps
   const ok = obj && obj.site && obj.site.name && obj.site.url && obj.auditDate && obj.scores && obj.checks;
   if (!ok) throw new Error('Schema validatie faalde: verplichte eigenschappen ontbreken.');
 }
@@ -117,15 +136,28 @@ function buildReport() {
   console.log('✅ Klaar. Zie dist/report.html');
 }
 
-function main() {
+async function main() {
   const args = parseArgs();
+  if (!args.siteUrl) {
+    console.error('❌ Gebruik: node scripts/run-all.js --siteUrl "https://voorbeeld.nl"');
+    process.exit(1);
+  }
+
   ensureDir(paths.dist);
+
+  // Auto-detect siteName
+  console.log('🔎 SiteName bepalen uit meta...');
+  const html = await fetchHtml(args.siteUrl);
+  const siteName = extractSiteName(html, args.siteUrl);
+  console.log(`→ siteName: ${siteName}`);
+
   runCollectors();
-  const merged = mergePartials(args);
+  const merged = mergePartials({ siteName, siteUrl: args.siteUrl });
   validateSchema(merged);
   buildReport();
 }
 
 if (require.main === module) {
+  // Node 18+ top-level await workaround
   main();
 }

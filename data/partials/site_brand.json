@@ -1,0 +1,12 @@
+{
+  "site": {
+    "name": "WP Brothers",
+    "url": "https://wpbrothers.nl/"
+  },
+  "brand": {
+    "logo": "https://wpbrothers.nl/wp-content/uploads/2020/01/LogoColor.svg",
+    "fontFamily": "Montserrat, Arial, sans-serif",
+    "brandColor": "#0a2033",
+    "ctaColor": "#ff6900"
+  }
+}

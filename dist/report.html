@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Website Audit Rapport — Jouw Site</title>
+  <style>/* Basale, nette styling in lijn met wensen */
+:root {
+  --brand: #0a2033;
+  --cta: #ff6900;
+  --ok: #15a34a;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --muted: #6b7280;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: #0f172a; font-family: Montserrat, Arial, sans-serif; }
+.wrapper { max-width: 1080px; margin: 32px auto; padding: 0 16px; }
+.header { display:flex; align-items:center; gap:16px; margin-bottom: 24px; }
+.header img { height: 40px; }
+.badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-weight:600; font-size: 12px; }
+.badge.ok { background:#dcfce7; color:#166534; }
+.badge.warn { background:#fef3c7; color:#92400e; }
+.badge.bad { background:#fee2e2; color:#991b1b; }
+.card { background: var(--card); border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.03); margin-bottom: 16px; }
+.h1 { font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+.h2 { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.score { font-size: 32px; font-weight: 800; }
+.kv { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid #e5e7eb; border-radius: 12px; }
+.kv .k { color: var(--muted); }
+hr { border: none; border-top:1px solid #e5e7eb; margin: 16px 0; }
+small.muted { color: var(--muted); }
+.footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+.link { color: var(--brand); text-decoration: none; border-bottom: 1px dashed var(--brand); }
+.cta { background: var(--cta); color: white; padding: 10px 14px; border-radius: 10px; text-decoration: none; font-weight: 700; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+.table th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <img src="https://wpbrothers.nl/wp-content/uploads/2020/01/LogoColor.svg" alt="Logo"/>
+      <div>
+        <div class="h1">Website Audit Rapport</div>
+        <small class="muted">https://wpbrothers.nl</small><br/>
+        <small class="muted">Auditdatum: 2025-10-09</small>
+      </div>
+      <div style="flex:1;"></div>
+      <a class="cta" href="https://wpbrothers.nl" target="_blank" rel="noreferrer">Bekijk site</a>
+    </div>
+
+    
+      <div class="card">
+        <div class="h2">Prestatie scores</div>
+        
+        <div class="grid">
+          <div class="card">
+              <div class="kv"><span class="k">performance</span> <span class="badge warn">Aandacht</span></div>
+              <div class="score">78<small class="muted">/100</small></div>
+            </div><div class="card">
+              <div class="kv"><span class="k">mobile performance</span> <span class="badge warn">Aandacht</span></div>
+              <div class="score">65<small class="muted">/100</small></div>
+            </div><div class="card">
+              <div class="kv"><span class="k">seo</span> <span class="badge warn">Aandacht</span></div>
+              <div class="score">72<small class="muted">/100</small></div>
+            </div><div class="card">
+              <div class="kv"><span class="k">accessibility</span> <span class="badge warn">Aandacht</span></div>
+              <div class="score">86<small class="muted">/100</small></div>
+            </div><div class="card">
+              <div class="kv"><span class="k">best practices</span> <span class="badge warn">Aandacht</span></div>
+              <div class="score">80<small class="muted">/100</small></div>
+            </div>
+        </div>
+      
+      </div>
+    
+      <div class="card">
+        <div class="h2">Plugins &amp; onderhoud</div>
+        
+        <div class="grid">
+          <div class="card">
+            <div class="kv"><span class="k">Totaal plugins</span><strong>22</strong></div>
+            <hr/>
+            <div class="kv"><span class="k">Verouderd</span>
+              <span>3 (13.6%)</span>
+            </div>
+            <div style="margin-top:8px;"><span class="badge ok">13.6%</span></div>
+          </div>
+          <div class="card">
+            <div class="kv"><span class="k">Gedeactiveerd</span>
+              <span>2 (9.1%)</span>
+            </div>
+            <div style="margin-top:8px;"><span class="badge ok">9.1%</span></div>
+          </div>
+          <div class="card">
+            <div class="kv"><span class="k">Uptime (30 dagen)</span>
+              <span>99.8%</span>
+            </div>
+            <div style="margin-top:8px;"><span class="badge warn">99.8%</span></div>
+            <small class="muted">Bron: ManageWP</small>
+          </div>
+        </div>
+      
+      </div>
+    
+      <div class="card">
+        <div class="h2">WCAG 2.1 AA overzicht</div>
+        
+        <div class="card">
+          <div class="kv"><span class="k">Slagingspercentage</span>
+            <strong>40.0%</strong>
+          </div>
+          <div style="margin:8px 0;"><span class="badge bad">40.0%</span></div>
+          <table class="table">
+            <thead><tr><th>Succescriterium</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                  <td>1.1.1 Non-text content</td>
+                  <td><span class="badge ok">PASS</span></td>
+                </tr><tr>
+                  <td>1.3.1 Info and relationships</td>
+                  <td><span class="badge warn">WARN</span></td>
+                </tr><tr>
+                  <td>1.4.3 Contrast (minimum)</td>
+                  <td><span class="badge bad">FAIL</span></td>
+                </tr><tr>
+                  <td>2.4.4 Link purpose (in context)</td>
+                  <td><span class="badge ok">PASS</span></td>
+                </tr><tr>
+                  <td>3.3.1 Error identification</td>
+                  <td><span class="badge warn">WARN</span></td>
+                </tr>
+            </tbody>
+          </table>
+          <p><small class="muted">
+            Tip: bundel per onderwerp en verwijs naar officiële 
+            <a class="link" href="https://www.w3.org/TR/WCAG21/">WCAG 2.1 documentatie</a> voor details.
+          </small></p>
+        </div>
+      
+      </div>
+    
+
+    <div class="footer">
+      Gemaakt met jullie audit pipeline. Kleuren volgen drempelwaarden uit <code>audit/thresholds.yaml</code>.
+    </div>
+  </div>
+</body>
+</html>

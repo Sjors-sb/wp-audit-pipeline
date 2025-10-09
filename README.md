@@ -71,3 +71,19 @@ Voorbeeldcollector staat toegevoegd in:
 ## CI (GitHub Actions) voorbeeld
 `.github/workflows/audit.yml` draait de flow en uploadt `dist/report.html` als artifact.
 
+
+
+## GitHub Action — handmatige run (zonder defaults)
+Deze workflow vraagt bij het starten om `siteName` en `siteUrl`:
+- Bestand: `.github/workflows/audit-manual.yml`
+- Start in GitHub via **Actions → WP Audit (manual) → Run workflow** en vul de velden in.
+
+
+### Auto siteName (meta)
+Vanaf nu hoef je alleen `--siteUrl` door te geven. `siteName` wordt automatisch bepaald uit
+`og:site_name` of `<title>`, met fallback naar de hostname.
+Voorbeeld lokaal:
+```bash
+node scripts/run-all.js --siteUrl "https://wpbrothers.nl"
+```
+In GitHub Actions (manual dispatch) wordt ook alleen `siteUrl` gevraagd.
