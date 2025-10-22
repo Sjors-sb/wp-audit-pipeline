@@ -55,7 +55,7 @@ function runCollectors(){
 
 function mergePartials({siteName, siteUrl}){
   ensureDir(paths.partials);
-  const files=fs.readdirSync(paths.partials).filter(f=>f.endsWith('.json'));
+  const files=fs.existsSync(paths.partials) ? fs.readdirSync(paths.partials).filter(f=>f.endsWith('.json')) : [];
   const merged={ site:{name:siteName,url:siteUrl}, auditDate:new Date().toISOString().slice(0,10), brand:{}, scores:{}, checks:{} };
   for(const f of files){
     const d=jread(path.join(paths.partials,f));
@@ -81,16 +81,23 @@ function validateSchema(o){
   if(!ok) throw new Error('Schema validatie faalde: verplichte velden ontbreken.');
 }
 
-function buildReport(){ cp.execFileSync('node',[paths.generator],{stdio:'inherit'}); }
-
-(async function main(){
+(function main(){
   const args=parseArgs();
   if(!args.siteUrl){ console.error('❌ Gebruik: node scripts/run-all.js --siteUrl "https://voorbeeld.nl"'); process.exit(1); }
   ensureDir(paths.dist);
-  const html=await fetchHtml(args.siteUrl);
-  const siteName=extractSiteName(html,args.siteUrl);
-  runCollectors();
-  const merged=mergePartials({siteName, siteUrl:args.siteUrl});
-  validateSchema(merged);
-  buildReport();
+  fetchHtml(args.siteUrl).then(html=>{
+    const siteName=extractSiteName(html,args.siteUrl);
+    runCollectors();
+    const merged=mergePartials({siteName, siteUrl:args.siteUrl});
+    validateSchema(merged);
+    // Automatisch rapport genereren
+    try {
+      console.log("📄 Rapport genereren...");
+      cp.execFileSync('node', [paths.generator], { stdio: 'inherit' });
+      console.log(`✅ Rapport klaar: ${paths.dist}/report.html`);
+    } catch (e) {
+      console.error("❌ Fout bij genereren rapport:", e.message);
+      process.exit(1);
+    }
+  });
 })();
