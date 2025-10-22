@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "ux": {
+      "nav_depth": 20,
+      "search": false,
+      "breadcrumbs": false,
+      "page_404": null,
+      "form_validation": null,
+      "locale": "nl-NL"
+    }
+  }
+}

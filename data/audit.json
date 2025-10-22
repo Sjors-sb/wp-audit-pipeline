@@ -53,33 +53,32 @@
       "robots": true,
       "sitemap": "https://wpbrothers.nl/sitemap.xml",
       "canonical": "https://wpbrothers.nl/",
-      "meta_title": "WP Brothers — WordPress specialisten",
-      "meta_description": "Wij bouwen en onderhouden WordPress websites.",
+      "meta_title": "Web Agency in Utrecht en Amsterdam",
+      "meta_description": "WP Brothers is het web agency dat vandaag bouwt aan jouw digitale impact van morgen. Met kennis en creativiteit verbinden we mens en technologie voor groei.",
       "og": true,
-      "twitter": true
+      "twitter": true,
+      "structured_data": []
     },
     "security": {
       "https": true,
-      "hsts": false,
+      "hsts": true,
       "mixed_content": false,
       "headers": [
-        "CSP",
         "X-Content-Type-Options",
-        "Referrer-Policy"
+        "Referrer-Policy",
+        "Permissions-Policy"
       ]
     },
     "legal": {
       "cookie_consent": true,
-      "privacy_url": "https://wpbrothers.nl/privacy",
-      "dpa": false,
-      "data_retention": "Gebruikersdata wordt na 12 mnd geanonimiseerd."
+      "privacy_url": "https://wpbrothers.nl/privacy-policy/"
     },
     "ux": {
-      "nav_depth": 3,
-      "search": true,
-      "breadcrumbs": true,
-      "page_404": true,
-      "form_validation": true,
+      "nav_depth": 20,
+      "search": false,
+      "breadcrumbs": false,
+      "page_404": null,
+      "form_validation": null,
       "locale": "nl-NL"
     },
     "wordpress": {
@@ -90,9 +89,7 @@
     },
     "analytics": {
       "ga4": true,
-      "gtm": true,
-      "consent_mode": true,
-      "server_side": false
+      "consent_mode": true
     }
   },
   "notes": "Dit is een uitgebreide demoversie. Koppel jullie echte data via collectors.",

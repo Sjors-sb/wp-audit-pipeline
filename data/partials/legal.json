@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "legal": {
+      "cookie_consent": true,
+      "privacy_url": "https://wpbrothers.nl/privacy-policy/"
+    },
+    "analytics": {
+      "ga4": true,
+      "consent_mode": true
+    }
+  }
+}

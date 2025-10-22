@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "security": {
+      "https": true,
+      "hsts": true,
+      "mixed_content": false,
+      "headers": [
+        "X-Content-Type-Options",
+        "Referrer-Policy",
+        "Permissions-Policy"
+      ]
+    }
+  }
+}

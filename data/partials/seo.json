@@ -1,0 +1,15 @@
+{
+  "checks": {
+    "seo_details": {
+      "indexable": true,
+      "robots": true,
+      "sitemap": "https://wpbrothers.nl/sitemap.xml",
+      "canonical": "https://wpbrothers.nl/",
+      "meta_title": "Web Agency in Utrecht en Amsterdam",
+      "meta_description": "WP Brothers is het web agency dat vandaag bouwt aan jouw digitale impact van morgen. Met kennis en creativiteit verbinden we mens en technologie voor groei.",
+      "og": true,
+      "twitter": true,
+      "structured_data": []
+    }
+  }
+}

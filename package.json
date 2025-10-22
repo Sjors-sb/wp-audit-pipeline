@@ -9,6 +9,13 @@
     "audit:run:wpbrothers": "node scripts/run-all.js --siteName \"WP Brothers\" --siteUrl \"https://wpbrothers.nl\""
   },
   "dependencies": {
-    "js-yaml": "^4.1.0"
+    "@axe-core/puppeteer": "^4.11.0",
+    "cheerio": "^1.1.2",
+    "chrome-launcher": "^1.2.1",
+    "js-yaml": "^4.1.0",
+    "jsdom": "^27.0.1",
+    "lighthouse": "^13.0.0",
+    "node-fetch": "^2.7.0",
+    "puppeteer": "^24.26.0"
   }
 }
